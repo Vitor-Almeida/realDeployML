@@ -76,14 +76,11 @@ class fitEvaluate():
     cached_test = test.batch(4096).cache()
     self.model.fit(cached_train, epochs=3)
     self.model.evaluate(cached_test, return_dict=True)
-    tf.saved_model.save(self.model, "/home/jaco/Projetos/realDeployML/realDeployML/models/rankingv1")
-
-    #return None
-
+    
 def getData():
 
-    ratings = tfds.load("movielens/100k-ratings", split="train",data_dir="/home/jaco/Projetos/realDeployML/data/movielens/ratings")
-    movies = tfds.load("movielens/100k-movies", split="train",data_dir="/home/jaco/Projetos/realDeployML/data/movielens/movies")
+    ratings = tfds.load("movielens/100k-ratings", split="train",data_dir=os.path.join(ROOT_DIR, 'data','movielens','ratings'))
+    #movies = tfds.load("movielens/100k-movies", split="train",data_dir=os.path.join(ROOT_DIR, 'data','movielens','movies'))
 
     ratings = ratings.map(lambda x: {
         "movie_title": x["movie_title"],
@@ -117,14 +114,14 @@ def getPredict(model,id,test_movie_titles):
 
 def main():
 
-    CONFIG_PATH = os.path.join(ROOT_DIR, 'data','movielens','ratings')
-
     train,test,unique_movie_titles,unique_user_ids = getData()
 
     model = fitEvaluate(train,test,unique_movie_titles,unique_user_ids)
 
+    tf.saved_model.save(model.model, os.path.join(ROOT_DIR, 'realDeployML','models','rankingv1','1'))
+
     #debugger:
-    getPredict(model.model,['42'],["M*A*S*H (1970)", "Dances with Wolves (1990)", "Speed (1994)"])
+    #getPredict(model.model,['42'],["M*A*S*H (1970)", "Dances with Wolves (1990)", "Speed (1994)"])
 
     return None
 
