@@ -8,3 +8,4 @@
 
 # ignore dataset folder and subfolders
 data/
+models/
