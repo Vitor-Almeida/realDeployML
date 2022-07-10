@@ -1,5 +1,5 @@
 import os
-from configs.definitions import ROOT_DIR
+from config.definitions import ROOT_DIR
 from typing import Dict, Text
 import numpy as np
 import tensorflow as tf
@@ -71,9 +71,13 @@ class fitEvaluate():
   def __init__(self,train,test,unique_movie_titles,unique_user_ids):
     super().__init__()
     self.model = MovielensModel(unique_movie_titles,unique_user_ids)
+
     self.model.compile(optimizer=tf.keras.optimizers.Adagrad(learning_rate=0.1))    
     cached_train = train.shuffle(100000).batch(8192).cache()
     cached_test = test.batch(4096).cache()
+
+    #ml flow:
+
     self.model.fit(cached_train, epochs=3)
     self.model.evaluate(cached_test, return_dict=True)
     
@@ -114,11 +118,17 @@ def getPredict(model,id,test_movie_titles):
 
 def main():
 
+    os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+
     train,test,unique_movie_titles,unique_user_ids = getData()
+
+    titlesExport = [title.decode('UTF-8') for title in np.array(unique_movie_titles)]
+
+    np.savetxt(os.path.join(ROOT_DIR, 'realdeployml','models','rankingv1','1','allmovietitles.csv'), np.array([titlesExport]), delimiter="||", fmt='%s')
 
     model = fitEvaluate(train,test,unique_movie_titles,unique_user_ids)
 
-    tf.saved_model.save(model.model, os.path.join(ROOT_DIR, 'realDeployML','models','rankingv1','1'))
+    tf.saved_model.save(model.model, os.path.join(ROOT_DIR, 'realdeployml','models','rankingv1','1'))
 
     #debugger:
     #getPredict(model.model,['42'],["M*A*S*H (1970)", "Dances with Wolves (1990)", "Speed (1994)"])

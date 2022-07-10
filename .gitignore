@@ -6,6 +6,12 @@
 *.csv
 *.env
 
+
+# ignore specific files
+todo.txt
+__pycache__
+.vscode
+
 # ignore dataset folder and subfolders
 data/
-models/
+realdeployml/models

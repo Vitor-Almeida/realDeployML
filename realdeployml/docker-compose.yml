@@ -1,0 +1,26 @@
+version: '3'
+#run:
+#sudo docker compose up -d --build
+#stop:
+#sudo docker stop $(sudo docker ps -a -q)
+#remove:
+#sudo docker rm $(sudo docker ps -a -q)
+#remove remove:
+#sudo docker system prune -a --volumes
+#get stdout logs:
+#sudo docker logs 5757c411ebbe
+#run bash:
+#sudo docker exec -t -i rankingv1 /bin/bash
+services:
+
+  rankingv1:
+    image: tensorflow/serving
+    container_name: rankingv1
+    command: tensorflow_model_server --port=8500 --rest_api_port=8501 --model_name=rankingv1 --model_base_path=/models/rankingv1
+    ports:
+      - "8501:8501"
+      - "8500:8500"
+    environment:
+      - MODEL_NAME=rankingv1
+    volumes:
+      - ./models/rankingv1/:/models/rankingv1
