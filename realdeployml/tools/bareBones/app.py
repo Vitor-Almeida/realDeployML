@@ -2,12 +2,17 @@ import tensorflow as tf
 import os
 import numpy as np
 from flask import Flask, request, jsonify
+#from config.definitions import ROOT_DIR ?
+
+#http://127.0.0.1:5000/?id=10
+#FLASK_APP=app.py flask run
 
 app = Flask(__name__)
 
 def getPredict(id):
 
-  ROOT_DIR="/home/jaco/Projetos/realDeployML"
+  ROOT_DIR = os.path.realpath(os.path.join(os.path.dirname(__file__),'..','..','..')) #como arrumar isso aqui?
+  #ROOT_DIR="/home/jaco/Projetos/realDeployML" ?
   model_path = os.path.join(ROOT_DIR, 'realdeployml','models','rankingv1','1')
 
   model = tf.saved_model.load(model_path)
@@ -43,8 +48,7 @@ def getPredict(id):
 
 @app.route('/', methods=['GET'])
 def predict():
-    #http://127.0.0.1:5000/?id=10
-    #FLASK_APP=app.py flask run
     id = request.args.get('id')
     scoredMovies = getPredict(id)
     return scoredMovies
+

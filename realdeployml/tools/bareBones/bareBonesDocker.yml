@@ -1,0 +1,30 @@
+version: '3'
+#run:
+#sudo docker compose -f ~/Projetos/realDeployML/realdeployml/tools/bareBones/bareBonesDocker.yml up -d --build
+#stop:
+#sudo docker stop $(sudo docker ps -a -q)
+#remove:
+#sudo docker rm $(sudo docker ps -a -q)
+#remove remove:
+#sudo docker system prune -a --volumes
+#get stdout logs:
+#sudo docker logs 5757c411ebbe
+#run bash:
+#sudo docker exec -t -i rankingv1 /bin/bash
+services:
+
+  rankingv1:
+    image: jacobiu/baseimagedeploy:latest
+    container_name: rankingv1
+    #working_dir: /home/jaco/Projetos/realDeployML/
+    #command: tail -F anything
+    #arrumnar:
+    command: /home/jaco/Projetos/realDeployML/realdeployml/tools/bareBones/bootstrap.sh
+    #entrypoint: /home/jaco/Projetos/realDeployML/bootstrap.sh
+    ports:
+      - "5000:5000"
+    volumes:
+    #arrumar:
+      - /home/jaco/Projetos/realDeployML/:/home/jaco/Projetos/realDeployML/
+
+  #x3
