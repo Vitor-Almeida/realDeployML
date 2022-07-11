@@ -11,6 +11,7 @@
 todo.txt
 __pycache__
 .vscode
+baseimagedeploy.dockerfile
 
 # ignore dataset folder and subfolders
 data/

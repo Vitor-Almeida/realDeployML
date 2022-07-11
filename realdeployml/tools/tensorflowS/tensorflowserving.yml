@@ -1,6 +1,6 @@
 version: '3'
 #run:
-#sudo docker compose up -d --build
+#sudo docker compose -f tools/tensorflowS/tensorflowserving.yml up -d --build
 #stop:
 #sudo docker stop $(sudo docker ps -a -q)
 #remove:
@@ -23,4 +23,4 @@ services:
     environment:
       - MODEL_NAME=rankingv1
     volumes:
-      - ./models/rankingv1/:/models/rankingv1
+      - /home/jaco/Projetos/realDeployML/models/rankingv1/:/models/rankingv1
