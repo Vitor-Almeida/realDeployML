@@ -5,6 +5,10 @@ import numpy as np
 import tensorflow as tf
 import tensorflow_recommenders as tfrs
 import tensorflow_datasets as tfds
+from typing import Tuple
+
+from prefect import flow, task
+from prefect.task_runners import SequentialTaskRunner
 
 class RankingModel(tf.keras.Model):
 
@@ -66,10 +70,16 @@ class MovielensModel(tfrs.models.Model):
     # The task computes the loss and the metrics.
     return self.task(labels=labels, predictions=rating_predictions)
 
+@task
 class fitEvaluate():
-
-  def __init__(self,train,test,unique_movie_titles,unique_user_ids):
+  def __init__(self,data):
     super().__init__()
+
+    train = data.train
+    test = data.test
+    unique_movie_titles = data.unique_movie_titles
+    unique_user_ids = data.unique_user_ids
+
     self.model = MovielensModel(unique_movie_titles,unique_user_ids)
 
     self.model.compile(optimizer=tf.keras.optimizers.Adagrad(learning_rate=0.1))    
@@ -80,8 +90,10 @@ class fitEvaluate():
 
     self.model.fit(cached_train, epochs=3)
     self.model.evaluate(cached_test, return_dict=True)
-    
-def getData():
+
+class dataType():
+  def __init__(self):
+    super().__init__()
 
     ratings = tfds.load("movielens/100k-ratings", split="train",data_dir=os.path.join(ROOT_DIR, 'data','movielens','ratings'))
     #movies = tfds.load("movielens/100k-movies", split="train",data_dir=os.path.join(ROOT_DIR, 'data','movielens','movies'))
@@ -99,8 +111,24 @@ def getData():
     user_ids = ratings.batch(1000000).map(lambda x: x["user_id"])
     unique_movie_titles = np.unique(np.concatenate(list(movie_titles)))
     unique_user_ids = np.unique(np.concatenate(list(user_ids)))
-    
-    return train,test,unique_movie_titles,unique_user_ids
+
+    unique_movie_titles = [title.decode('UTF-8') for title in np.array(unique_movie_titles)]
+    unique_movie_titles = np.array(unique_movie_titles)
+    unique_user_ids = [title.decode('UTF-8') for title in np.array(unique_user_ids)]
+    unique_user_ids = np.array(unique_user_ids)
+
+    self.train = train
+    self.test = test
+    self.unique_movie_titles = unique_movie_titles
+    self.unique_user_ids = unique_user_ids
+
+@task
+def saveFiles(model,data,version):
+
+  tf.saved_model.save(model.model, os.path.join(ROOT_DIR, 'realdeployml','models','rankingv1',version))
+  np.savetxt(os.path.join(ROOT_DIR, 'realdeployml','models','rankingv1',version,'allmovietitles.csv'), np.array([data.unique_movie_titles]), delimiter="||", fmt='%s')
+
+  return None
 
 def getPredict(model,id,test_movie_titles):
   test_ratings = {}
@@ -116,20 +144,16 @@ def getPredict(model,id,test_movie_titles):
 
   return None
 
+@flow
 def main():
 
     #os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2' #nao funciona
 
-    train,test,unique_movie_titles,unique_user_ids = getData()
-
-    titlesExport = [title.decode('UTF-8') for title in np.array(unique_movie_titles)]
-
-    np.savetxt(os.path.join(ROOT_DIR, 'realdeployml','models','rankingv1','1','allmovietitles.csv'), np.array([titlesExport]), delimiter="||", fmt='%s')
-
-    model = fitEvaluate(train,test,unique_movie_titles,unique_user_ids)
-
+    data = dataType()
+    model = fitEvaluate(data).result()
+    saveFiles(model,data,'1')
+    
     #colocar um read txt , se true, muda esse '1'
-    tf.saved_model.save(model.model, os.path.join(ROOT_DIR, 'realdeployml','models','rankingv1','1'))
 
     #debugger:
     #getPredict(model.model,['42'],["M*A*S*H (1970)", "Dances with Wolves (1990)", "Speed (1994)"])
